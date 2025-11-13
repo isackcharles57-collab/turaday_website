@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tura day secondary school</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="logo">TURA DAY SECONDARY SCHOOL</div>
+    <nav class="navbar">
+      <ul class="nav-links">
+        <li><a href="#nyumbani">Home</a></li>
+        <li><a href="#kuhusu">About</a></li>
+        <li><a href="#masomo">Subjects</a></li>
+        <li><a href="#matokeo">Results</a></li>
+           <li><a href="#pastpapers">Past papers</a></li>
+        <li><a href="#uongozi">Organization</a></li>
+        <li><a href="#staff">Staff</a></li>
+        <li><a href="#gallery">Gallery</a></li>
+        <li><a href="#mawasiliano">Contacts</a></li>
+        <li><a href="#news">News</a></li>
+          <li><a href="#location">Location</a></li>
+      </ul>
+    </nav>
+    <div class="hamburger">
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section id="nyumbani" class="hero">
+  <marquee behavior="motion" direction="left"> <h3 style="color: tomato;">FORM TWO NECTA EXAMS 2025 PROCEEDING.</h3></marquee>
+    <img src="" alt="nembo ya Shule" width="120" height="120">
+    <h1>Welcom Tura Day Secondary School</h1>
+    <p>Education with Standards</p>
+    <a href="#kuhusu" class="btn">Learn more</a>
+       <a href="#location" class="btn">Google Map</a>
+
+  </section>
+<section>
+  
+    <!-- HTML CHART NA AI SECTION-->
+         <h2>Ask any thing</h2>
+  <div id="chat"></div><br>
+  <input id="userInput" placeholder="write your text here..." />
+  <button onclick="sendMessage()">Send text</button>
+
+  <!-- script chart na AI -->
+  <script>
+    async function sendMessage() {
+      const input = document.getElementById('userInput');
+      const chat = document.getElementById('chat');
+      const userMessage = input.value;
+      chat.innerHTML += `<p><b>Question:</b> ${userMessage}</p>`;
+      input.value = '';
+
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "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"
+        },
+        body: JSON.stringify({
+          model: "gpt-3.5-turbo",
+          messages: [{ role: "user", content: userMessage }]
+        })
+      });
+
+      const data = await response.json();
+      const aiMessage = data.choices[0].message.content;
+      chat.innerHTML += `<p><b>AI:</b> ${aiMessage}</p>`;
+      chat.scrollTop = chat.scrollHeight;
+    }
+  </script>
+
+</section>
+  <!-- About Section -->
+  <section id="kuhusu" class="about">
+    <h2>About us</h2>
+    <p>Tura Day Secondary School provides quality education and holistic development for learners.<br><br>
+     <u> At Tura day Secondary school, we pride ourselves on:</u><br>
+    Academic excellence through well structured programs <br>
+    promoting care values such as integrity, respect and perseverance<br>
+    Offering wide range of extra-curricular activities including sports, arts and clubs<br>
+  Providing modern facilities that support holistic development, including  sports fields
+dedicated and experienced staff, <br>our teachers are passionate, qualified and committed to student success<br>
+Innovative learning environment, We intergrate technology and modern teaching methods in classrooms </p>
+  </section>
+
+  <!-- Leadership Section -->
+   <!-- organization -->
+  <section id="uongozi" class="leadership">
+    <h2>School Organization</h2>
+    <div class="leaders">
+      <div class="leader"><img src="" alt="Headmistress photo"><h3>Headmistress <br> Roza S Lyimo</h3></div>
+      <div class="leader"><img src="" alt="Deputy head of school photo"><h3>Deputy Head of school <br> Bahati Chiyoga</h3></div>
+      <div class="leader"><img src="" alt="Academic master photo"><h3>Academic master <br> Peter Isack Lumaji</h3></div>
+   
+    </div> <br>
+
+    <!-- staff  -->
+     <h2>Staff</h2>
+    <div class="leaders" id="staff">
+      <div class="staff"><img src="" alt="Biology teacher photo"><h3>Biology teacher <br>Sir. Isack Charles</h3></div>
+      <div class="staff"><img src="" alt="Biology teacher photo"><h3>Biology teacher <br>Madam Amidi Chausiku</h3></div>
+      <div class="staff"><img src="" alt="Chemistry teacher photo"><h3>Chemistry teacher <br> Madam. Bisada</h3></div>
+      <div class="staff"><img src="" alt="physics teacher photo"><h3> physics teacher <br> Sir. Bahati Chiyoga</h3></div>
+     <div class="staff"><img src="" alt="mathematics teacher photo"><h3>Mathematics teacher<br>Sir. Peter Isack Lumaji</h3></div>
+      <div class="staff"><img src="" alt="mathematics teacher photo"><h3>Mathematics teacher<br>Sir. Abdalla Shedrack</h3></div>
+      <div class="staff"><img src="" alt="kiswahili teacher photo"><h3>Kiswahili teacher <br> Madam. Mary Kitamoi</h3></div>
+      <div class="staff"><img src="" alt="Geography teacher photo"><h3> Geography teacher <br> Madam Mariam</h3></div>
+      <div class="staff"><img src="" alt="B/studies teacher photo"><h3>B/studies teacher <br>Madam Narindwa</h3></div>
+     <div class="staff"><img src="" alt="History teacher photo"><h3>History teacher <br>Mr. Agaton</h3></div>
+    </div>
+  </section>
+
+  <!-- Subjects Section -->
+  <section id="masomo" class="subjects">
+    <h2>Our courses</h2>
+    <div class="subject-list">
+      <div class="subject">Mathematics</div>
+      <div class="subject">physics</div>
+      <div class="subject">Biology</div>
+      <div class="subject">Kiswahili</div>
+      <div class="subject">Geography</div>
+      <div class="subject">Hi/Tanzania</div>
+      <div class="subject">civics</div>
+      <div class="subject">History</div>
+      <div class="subject">Chemistry</div>
+      <div class="subject">Business studies</div>
+      <div class="subject">Computer studies</div>
+    
+    </div>
+  </section>
+
+  <!-- Results Section for all classes-->
+  <section id="matokeo" class="results">
+    <h2>Student Results</h2>
+    <p>Pakua matokeo ya kila kidato:</p>
+    <div class="result-list">
+      <div class="result">
+        <!-- standard 1 -->
+     <h3>form1-2025</h3>
+    <a href="kidato1.pdf" target="_blank">mid-term</a>
+         <a href="kidato1.pdf" target="_blank">terminal</a>
+         <a href="kidato1.pdf" target="_blank">mid-term</a>
+         <a href="kidato1.pdf" target="_blank">Annual</a>
+    </div>
+
+<!-- standard 2 -->
+      <div class="result"><h3>form2   -2025</h3>
+     <a href="kidato1.pdf" target="_blank">mid-term</a>
+         <a href="kidato1.pdf" target="_blank">terminal</a>
+         <a href="kidato1.pdf" target="_blank">mid-term</a>
+         <a href="kidato1.pdf" target="_blank">Annual</a>
+    </div>
+<!-- standard 3 -->
+
+      <div class="result"><h3>form3 -2025</h3>
+        <a href="kidato1.pdf" target="_blank">mid-term</a>
+         <a href="kidato1.pdf" target="_blank">terminal</a>
+         <a href="kidato1.pdf" target="_blank">mid-term</a>
+         <a href="kidato1.pdf" target="_blank">Annual</a>
+    </div>
+    </section>
+    <!-- PAST PAPERS -->
+      <section id="pastpapers" class="results">
+    <h2>PAST PAPERS</h2>
+    <p>PAKUA MITIHANI YA FORM ONE:</p>
+    <div class="result-list">
+      <div class="result">
+ <!--  CHEMISTRY -->
+     <h3>CHEMISTRY</h3>
+         <a href="" target="_blank">Chemistry-exam</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+
+<!-- BIOLOGY  -->
+      <div class="result"><h3>BIOLOGY</h3>
+     <a href="" target="_blank">BundaMock2025</a>
+         <a href="" target="_blank">RUFIJIexam2025</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+<!-- PHYSICS-->
+
+      <div class="result"><h3>PHYSICS</h3>
+        <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+<!-- MATHEMATICS-->
+      <div class="result"><h3>MATHEMATICS</h3>
+        <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+
+<!-- GEOGRAPHY -->
+      <div class="result"><h3>GEOGRAPHY</h3>
+     <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+
+<!-- KISWAHILI -->
+      <div class="result"><h3>KISWAHILI</h3>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+    <!-- EDK -->
+      <div class="result"><h3>ELIMU YA DINI YA KIISLAM</h3>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+    <!-- BUSINESS STUDIES -->
+      <div class="result"><h3>BUSINESS STUDIES</h3>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+    </div> <br>
+
+
+    <!-- FORM TWO PAST PAPERS-->
+     <p>PAKUA MITIHANI YA FORM TWO:</p>
+    <div class="result-list">
+      <div class="result">
+ <!--  CHEMISTRY -->
+     <h3>CHEMISTRY</h3>
+    <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+
+<!-- BIOLOGY  -->
+      <div class="result"><h3>BIOLOGY</h3>
+     <a href="BioF2BundaMockMarch2025.pdf" target="_blank">BundaMock2025</a>
+         <a href="F2 RUFIJI EXAM.pdf" target="_blank">RUFIJIexam2025</a>
+         <a href="pre-necta form 2 tura.pdf" target="_blank">TOHASSA2022</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+<!-- PHYSICS-->
+
+      <div class="result"><h3>PHYSICS</h3>
+        <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+<!-- MATHEMATICS-->
+      <div class="result"><h3>MATHEMATICS</h3>
+        <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+
+<!-- GEOGRAPHY -->
+      <div class="result"><h3>GEOGRAPHY</h3>
+     <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+
+<!-- KISWAHILI -->
+      <div class="result"><h3>KISWAHILI</h3>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+    <!-- EDK -->
+      <div class="result"><h3>ELIMU YA DINI YA KIISLAM</h3>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+    <!-- BUSINESS STUDIES -->
+      <div class="result"><h3>BUSINESS STUDIES</h3>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+    </div> ,<BR>
+
+      <!-- FORM THREE PAST PAPERS -->
+       <p>PAKUA MITIHANI YA FORM THREE:</p>
+    <div class="result-list">
+      <div class="result">
+ <!--  CHEMISTRY -->
+     <h3>CHEMISTRY</h3>
+    <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+
+<!-- BIOLOGY  -->
+      <div class="result"><h3>BIOLOGY</h3>
+     <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+<!-- PHYSICS-->
+
+      <div class="result"><h3>PHYSICS</h3>
+        <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+<!-- MATHEMATICS-->
+      <div class="result"><h3>MATHEMATICS</h3>
+        <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+
+<!-- GEOGRAPHY -->
+      <div class="result"><h3>GEOGRAPHY</h3>
+     <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+
+<!-- KISWAHILI -->
+      <div class="result"><h3>KISWAHILI</h3>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+    <!-- EDK -->
+      <div class="result"><h3>ELIMU YA DINI YA KIISLAM</h3>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+    <!-- BUSINESS STUDIES -->
+      <div class="result"><h3>BUSINESS STUDIES</h3>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+    </div> <BR>
+
+    <!-- FORM FOUR PAST PAPERS -->
+       <p>PAKUA MITIHANI YA FORM FOUR:</p>
+    <div class="result-list">
+      <div class="result">
+ <!--  CHEMISTRY -->
+     <h3>CHEMISTRY</h3>
+    <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+
+<!-- BIOLOGY  -->
+      <div class="result"><h3>BIOLOGY</h3>
+     <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+<!-- PHYSICS-->
+
+      <div class="result"><h3>PHYSICS</h3>
+        <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+<!-- MATHEMATICS-->
+      <div class="result"><h3>MATHEMATICS</h3>
+        <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+
+<!-- GEOGRAPHY -->
+      <div class="result"><h3>GEOGRAPHY</h3>
+     <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+
+<!-- KISWAHILI -->
+      <div class="result"><h3>KISWAHILI</h3>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+    <!-- EDK -->
+      <div class="result"><h3>ELIMU YA DINI YA KIISLAM</h3>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+    <!-- BUSINESS STUDIES -->
+      <div class="result"><h3>BUSINESS STUDIES</h3>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+         <a href="kidato1.pdf" target="_blank">download</a>
+    </div>
+    </div>
+  </section>
+
+  <!-- News Section -->
+  <section id="news" class="section">
+    <h2>Latest News</h2>
+    <div class="news-grid">
+      <div class="news-card">
+       <marquee behavior="motion" direction="left"> <h3 style="color: tomato;">FORM TWO NECTA EXAMS 2025 PROCEEDING.</h3></marquee>
+        <p style="color: tomato;">Join us in academic year 2026.</p>
+      </div> <br><br>
+  </section>
+
+  <!-- Gallery Section -->
+  <section id="gallery" class="gallery">
+    <h2>School Gallery</h2>
+    <div class="gallery-grid">
+      <img src="school.jpg" alt="Shule 2">
+      <img src="school3.jpg" alt="Shule 3">
+      <img src="school4.jpg" alt="Shule 4">
+      <img src="school5.jpg" alt="Shule 5">
+      <img src="school6.jpg" alt="Shule 6">
+      <img src="kolo.png" alt="kolo image">
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="mawasiliano" class="contact">
+    <h2>Contact us</h2>
+    <p>📞 0789 529 390</p>
+    <p>✉️ Email: turadayss@gmail.com</p>
+
+    <h2> WhatsApp</h2>
+
+<a class="whatsapp-btn" href="https://wa.me/0789 529 390?text=Habari%20za%20shule%20Naweza%20kupata%20maelezo%20zaidi%20kuhusu%20shule%20yako?%3F" target="_blank">
+    Tuma WhatsApp
+</a> <BR><BR><BR>
+
+  <!-- map section -->
+   <section id="location">
+  <h2>Our Location on Google Map</h2>
+<iframe
+style="position: centre;"
+  width="600"
+  height="450"
+  style="border:0;"
+  loading="lazy"
+  allowfullscreen=""
+  referrerpolicy="no-referrer-when-downgrade"
+  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3980.0000000000005!2d38.3850445!3d-6.3362339!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x185c4abcdef12345%3A0xabcdef1234567890!2sMsata%2C%20Bagamoyo%20District%2C%20Pwani%20Region%2C%20Tanzania!5e0!3m2!1sen!2stz!4v1700000000000!5m2!1sen!2stz">
+</iframe>
+
+
+  <!-- Footer -->
+  <footer>
+  <i> <p>&copy; 2025 developer: Isack Charles. copyright reserved.</p></i> 
+  </footer>
+
+  <!-- Hamburger Script -->
+  <script>
+    const hamburger = document.querySelector(".hamburger");
+    const navLinks = document.querySelector(".nav-links");
+
+    hamburger.addEventListener("click", () => {
+      navLinks.classList.toggle("active");
+      hamburger.classList.toggle("toggle");
+    });
+  </script>
+</body>
+</html>
