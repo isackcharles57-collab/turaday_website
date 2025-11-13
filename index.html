@@ -57,7 +57,7 @@
       const input = document.getElementById('userInput');
       const chat = document.getElementById('chat');
       const userMessage = input.value;
-      chat.innerHTML += `<p><b>Question:</b> ${userMessage}</p>`;
+      chat.innerHTML += `<p><b> Bado inafanyiwa marekebisho haina majibu ya swali lako kwa sasa:</b> ${userMessage}</p>`;
       input.value = '';
 
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
