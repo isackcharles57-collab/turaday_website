@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Smart Timetable — Multi-School (Tura Day Secondary)</title>
+
+<!-- SheetJS for Excel export -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<style>
+:root{
+  --header-start:#0d47a1; --header-end:#42a5f5;
+  --btn-start:#1976d2; --btn-end:#00bcd4;
+  --subject-start:#8e24aa; --subject-end:#ff4081;
+  --break-bg:#fff9c4; --lunch-bg:#ffccbc; --remedial-bg:#c8e6c9;
+  --bg:#f3f7fb; --card:#ffffff; --footer-bg:#072a5f; --footer-text:#fff; --muted:#556;
+}
+*{box-sizing:border-box}
+body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial; margin:0; background:var(--bg); color:#0b2336; -webkit-font-smoothing:antialiased}
+.header{
+  padding:14px 18px; display:flex; gap:12px; align-items:center; justify-content:space-between;
+  background:linear-gradient(90deg,var(--header-start),var(--header-end)); color:white;
+}
+.header h1{font-size:18px;margin:0}
+.wrap{max-width:1200px;margin:18px auto;padding:0 12px}
+.layout{display:grid; grid-template-columns:360px 1fr; gap:16px}
+@media(max-width:980px){ .layout{grid-template-columns:1fr} }
+.panel{background:var(--card); padding:14px; border-radius:10px; box-shadow:0 6px 20px rgba(15,35,80,0.06)}
+label{display:block; font-size:13px; color:var(--muted); margin-top:10px}
+input[type=text], select, textarea, input[type=number], input[type=time]{
+  width:100%; padding:10px; margin-top:6px; border-radius:8px; border:1px solid #dbe7ff;
+}
+textarea{min-height:90px; resize:vertical}
+.row{display:flex; gap:8px; flex-wrap:wrap}
+.btn{background:linear-gradient(90deg,var(--btn-start),var(--btn-end)); color:white; border:none; padding:10px 12px; border-radius:8px; cursor:pointer}
+.ghost{background:transparent; border:1px solid #d9eaff; color:var(--btn-start); padding:9px 11px}
+.small{font-size:13px; color:var(--muted)}
+.subjects .subject{background:linear-gradient(90deg,var(--subject-start),var(--subject-end)); color:white; padding:8px 10px; border-radius:8px; margin-bottom:8px; cursor:grab; user-select:none}
+.subjects .subject:active{cursor:grabbing}
+.tabs{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px}
+.tabs button{padding:8px 10px; border-radius:8px; border:1px solid transparent; background:#f5f9ff; cursor:pointer}
+.tabs button.active{background:var(--btn-start); color:white; border-color:transparent}
+.timetable-wrap{overflow:auto}
+table.timetable{width:100%; border-collapse:collapse; min-width:760px}
+table.timetable th{background:var(--btn-start); color:#fff; padding:8px; position:sticky; top:0; z-index:2; font-size:13px}
+table.timetable td{border:1px solid #e6eefc; padding:8px; min-height:52px; vertical-align:middle; text-align:center; font-size:13px}
+td.dropzone{background:#fbfdff; cursor:grab}
+td.empty{color:var(--muted)}
+tr.break{background:var(--break-bg); font-weight:700}
+tr.lunch{background:var(--lunch-bg); font-weight:700}
+tr.remedial{background:var(--remedial-bg); font-weight:700}
+.controls-row{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap}
+.footer{background:var(--footer-bg); color:var(--footer-text); padding:10px; border-radius:6px; margin-top:18px; text-align:center}
+
+/* small screen adjustments */
+@media(max-width:720px){
+  table.timetable{min-width:unset}
+  table.timetable thead{display:none}
+  table.timetable tr{display:block; margin-bottom:8px; border-radius:8px; overflow:hidden}
+  table.timetable td{display:block; text-align:left; padding:8px}
+  table.timetable td:first-child{background:#f6fbff; font-weight:700}
+  td[data-label]:before{content:attr(data-label); display:block; font-weight:700; color:var(--muted); margin-bottom:6px}
+}
+
+/* print styling - ensure print all classes fits a single landscape page when possible */
+@media print{
+  body{background:white; margin:0; padding:0; font-size:10px}
+  .header, .panel button, .controls-row, .subjects, .panel .small, .ghost, hr, .tabs, .controls-row, .row, .btn, .ghost {display:none !important}
+  .wrap{max-width:100%}
+  .print-grid{width:100%; font-size:9px; border-collapse:collapse}
+  .print-grid th, .print-grid td{border:1px solid #aaa; padding:4px}
+  @page{size:landscape; margin:6mm;}
+}
+.small-muted{font-size:12px;color:var(--muted)}
+.school-list{max-height:120px; overflow:auto; border:1px solid #eef4ff; padding:8px; border-radius:6px; background:#fbfeff}
+.status{color:green; font-size:13px; margin-top:8px}
+.field-inline{display:flex; gap:8px; align-items:center}
+.period-row{display:flex; gap:8px; align-items:center; margin-top:6px}
+.period-row input[type=time]{width:110px}
+.period-row select{width:120px}
+.add-class-row{display:flex; gap:8px; margin-top:8px}
+.small-btn{padding:6px 10px; border-radius:6px; border:none; cursor:pointer; background:#eee}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex; gap:12px; align-items:center;">
+    <h1 id="siteTitle">Tura Day Secondary — Smart Timetable</h1>
+    <div class="small-muted" id="headerSub">Multi-school • customizable periods • printable one page</div>
+  </div>
+
+  <div style="display:flex; gap:8px; align-items:center;">
+    <select id="schoolSelector" class="small-btn"></select>
+    <button class="ghost" onclick="promptNewSchool()">New School</button>
+    <button class="ghost" onclick="deleteSchool()">Delete</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="layout">
+
+    <!-- LEFT PANEL -->
+    <div class="panel">
+      <strong>School Profile</strong>
+
+      <label>School name</label>
+      <input id="schoolName" placeholder="e.g. Tura Day Secondary" />
+
+      <label>Walimu & Masomo (format: Name - Subject [- double])</label>
+      <textarea id="teachersInput" placeholder="Isack - Biology - double&#10;John - Math&#10;Anna - English"></textarea>
+
+      <label>Madarasa (comma-separated)</label>
+      <input id="classesInput" placeholder="Form 1A, Form 1B, Form 2A" type="text"/>
+
+      <div class="add-class-row">
+        <input id="newClassName" placeholder="Add class (e.g. Form 5A)" />
+        <button class="small-btn" onclick="addClass()">Add</button>
+        <button class="small-btn" onclick="removeSelectedClass()">Remove Selected</button>
+      </div>
+
+      <label>Max periods per teacher per day (optional)</label>
+      <input id="maxPerDay" type="number" min="1" />
+
+      <div class="controls-row">
+        <button class="btn" onclick="applyAndGenerate()">Save & Auto-generate</button>
+        <button class="ghost" onclick="saveSchool()">Save Profile</button>
+        <button class="ghost" onclick="loadSchool()">Load Profile</button>
+      </div>
+
+      <hr style="margin:12px 0;border:none;border-top:1px solid #eef4ff"/>
+
+      <strong>Periods (customize times & types)</strong>
+      <div class="small-muted">Add, edit or reorder periods. Ensure Break at 10:40 & Lunch at 13:00 if you want defaults.</div>
+
+      <div id="periodsList" style="margin-top:8px; max-height:220px; overflow:auto; border:1px solid #eef4ff; padding:8px; border-radius:6px; background:#fff"></div>
+
+      <div style="margin-top:8px; display:flex; gap:8px; align-items:center">
+        <button class="small-btn" onclick="addPeriod()">+ Add Period</button>
+        <button class="small-btn" onclick="sortDefaultPeriods()">Load Default</button>
+        <button class="small-btn" onclick="savePeriodsFromUI()">Save Periods</button>
+      </div>
+
+      <hr style="margin:12px 0;border:none;border-top:1px solid #eef4ff"/>
+
+      <strong>Subjects (drag to timetable)</strong>
+      <div class="subjects" id="subjectPanel" style="margin-top:8px; max-height:160px; overflow:auto"></div>
+
+      <div class="controls-row" style="margin-top:10px">
+        <button class="btn" onclick="exportExcel()">Export Excel</button>
+        <button class="ghost" onclick="printAllClasses()">Print All Classes</button>
+        <button class="ghost" onclick="exportSchoolJSON()">Export School JSON</button>
+        <button class="ghost" onclick="importSchoolJSON()">Import School JSON</button>
+      </div>
+
+      <div style="margin-top:12px">
+        <small class="small-muted">Saved schools (local):</small>
+        <div class="school-list" id="savedSchools"></div>
+      </div>
+
+      <div id="leftStatus" class="status"></div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="panel">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <strong id="schoolTitle">Tura Day Secondary</strong>
+          <div class="small-muted">Break & Lunch are editable in periods. Remedial default 15:00–17:30.</div>
+        </div>
+
+        <div style="display:flex; gap:8px; align-items:center;">
+          <label class="small-muted" style="margin:0">Autofill empty:</label>
+          <input type="checkbox" id="autofillCheck" checked />
+        </div>
+      </div>
+
+      <label style="margin-top:10px">Select class to view/edit</label>
+      <div id="tabsContainer" class="tabs"></div>
+
+      <div class="timetable-wrap" style="margin-top:10px">
+        <div id="timetableHolder"></div>
+      </div>
+
+      <div class="controls-row" style="margin-top:10px">
+        <button class="btn" onclick="saveCurrent()">Save Current</button>
+        <button class="ghost" onclick="resetCurrent()">Reset</button>
+        <button class="ghost" onclick="clearCurrent()">Clear Timetable</button>
+      </div>
+
+      <div id="rightStatus" class="status"></div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    Developer: Isack Charles
+  </div>
+</div>
+
+<script>
+// ---------------------------
+// Full Single-file Timetable
+// ---------------------------
+const STORAGE_KEY = 'smartTimetable_multi_schools_v2';
+let schools = {}; // saved schools
+let currentSchool = null;
+let currentClassIndex = 0;
+
+// UI refs
+const schoolSelector = document.getElementById('schoolSelector');
+const schoolNameInput = document.getElementById('schoolName');
+const teachersInput = document.getElementById('teachersInput');
+const classesInput = document.getElementById('classesInput');
+const subjectPanel = document.getElementById('subjectPanel');
+const savedSchoolsDiv = document.getElementById('savedSchools');
+const schoolTitle = document.getElementById('schoolTitle');
+const siteTitle = document.getElementById('siteTitle');
+const periodsList = document.getElementById('periodsList');
+const maxPerDayInput = document.getElementById('maxPerDay');
+
+// Helpers
+function genId(){ return Math.random().toString(36).slice(2,9); }
+
+// default classes A-D for Form1-4
+function defaultClasses(){
+  const arr=[];
+  for(let grade=1; grade<=4; grade++){
+    for(const s of ['A','B','C','D']) arr.push(`Form ${grade}${s}`);
+  }
+  return arr;
+}
+
+// default periods config (40min blocks, break at 10:40, lunch 13:00, remedial 15:00-17:30)
+function defaultPeriods(){
+  // returns array of {id, start, end, type, label}
+  const p=[];
+  function add(s,e,type,label){ p.push({id:genId(), start:s, end:e, type:type||'normal', label: label || `${s}-${e}`}); }
+  add('07:30','08:10','normal'); add('08:10','08:50','normal'); add('08:50','09:30','normal'); add('09:30','10:10','normal');
+  add('10:10','10:40','normal'); add('10:40','11:00','break','Break');
+  add('11:00','11:40','normal'); add('11:40','12:20','normal'); add('12:20','13:00','normal');
+  add('13:00','13:40','lunch','Lunch'); add('13:40','14:20','normal'); add('14:20','15:00','normal');
+  add('15:00','17:30','remedial','Remedial');
+  return p;
+}
+
+// storage
+function loadAllSchools(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw) schools = JSON.parse(raw);
+  else {
+    // create initial default school
+    const base = makeEmptySchool('Tura Day Secondary');
+    schools['Tura Day Secondary'] = base;
+    saveAllSchools();
+  }
+  refreshSchoolSelector();
+  renderSavedSchools();
+}
+
+function saveAllSchools(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(schools)); renderSavedSchools(); }
+
+// create empty school skeleton
+function makeEmptySchool(name){
+  const s = {
+    name: name || 'Unnamed School',
+    teachers: [{id:genId(), name:'Isack', subject:'Biology', double:false}],
+    classes: defaultClasses(),
+    periods: defaultPeriods(),
+    weekdays: ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+    timetable: {}, // className -> [dayIndex -> periodIndex -> cell|null]
+    maxPerDay: null
+  };
+  return s;
+}
+
+// UI: school selector
+function refreshSchoolSelector(){
+  schoolSelector.innerHTML = '';
+  const keys = Object.keys(schools);
+  if(keys.length===0){ const base = makeEmptySchool('Tura Day Secondary'); schools['Tura Day Secondary'] = base; saveAllSchools(); }
+  keys.forEach(k=>{
+    const opt = document.createElement('option'); opt.value = k; opt.textContent = k; schoolSelector.appendChild(opt);
+  });
+  schoolSelector.onchange = ()=> selectSchool(schoolSelector.value);
+}
+
+// render saved list
+function renderSavedSchools(){
+  savedSchoolsDiv.innerHTML = '';
+  Object.keys(schools).forEach(k=>{
+    const d = document.createElement('div'); d.textContent = k; savedSchoolsDiv.appendChild(d);
+  });
+}
+
+// New / Delete school
+function promptNewSchool(){
+  const name = prompt('Enter new school name');
+  if(!name) return;
+  if(schools[name] && !confirm('School exists. Overwrite?')) return;
+  const base = makeEmptySchool(name);
+  schools[name] = base; saveAllSchools(); selectSchool(name);
+}
+function deleteSchool(){
+  const name = schoolSelector.value;
+  if(!name) return alert('Select a school first');
+  if(!confirm('Delete school ' + name + '?')) return;
+  delete schools[name]; saveAllSchools();
+  const first = Object.keys(schools)[0]; if(first) selectSchool(first);
+  else { const b = makeEmptySchool('Tura Day Secondary'); schools['Tura Day Secondary']=b; saveAllSchools(); selectSchool('Tura Day Secondary'); }
+}
+
+// select school and populate UI
+function selectSchool(name){
+  if(!name || !schools[name]) return;
+  currentSchool = name;
+  const s = schools[name];
+  schoolSelector.value = name;
+  schoolTitle.textContent = s.name;
+  siteTitle.textContent = s.name + ' — Smart Timetable';
+  schoolNameInput.value = s.name;
+  teachersInput.value = s.teachers.map(t=> `${t.name} - ${t.subject}${t.double? ' - double' : ''}`).join('\n');
+  classesInput.value = s.classes.join(', ');
+  maxPerDayInput.value = s.maxPerDay || '';
+  renderSubjectPanel(s.teachers);
+  renderTabs(s.classes);
+  renderPeriodsUI(s.periods);
+  // if timetable exists, render first class else message
+  if(s.timetable && Object.keys(s.timetable).length>0) renderTimetableForClass(s.classes[0]);
+  else document.getElementById('timetableHolder').innerHTML = '<div class="small-muted">Click "Save & Auto-generate" to create timetable.</div>';
+}
+
+// parse teachers input into array
+function parseTeachers(text){
+  return text.split('\n').map(l=>l.trim()).filter(Boolean).map(line=>{
+    const parts = line.split('-').map(p=>p.trim());
+    if(parts.length < 2) return null;
+    const name = parts[0], subject = parts[1], double = parts[2] && parts[2].toLowerCase()==='double';
+    return {id:genId(), name, subject, double};
+  }).filter(Boolean);
+}
+
+// render subject panel (draggables)
+function renderSubjectPanel(teachers){
+  subjectPanel.innerHTML = '';
+  teachers.forEach(t=>{
+    const div = document.createElement('div');
+    div.className = 'subject'; div.draggable = true;
+    div.textContent = `${t.subject} — ${t.name}${t.double? ' (Double)' : ''}`;
+    div.dataset.teacherId = t.id; div.dataset.double = t.double ? '1' : '0';
+    div.addEventListener('dragstart', e=>{
+      e.dataTransfer.setData('text/plain', JSON.stringify({subject: t.subject, teacherName: t.name, teacherId: t.id, double: !!t.double}));
+    });
+    subjectPanel.appendChild(div);
+  });
+}
+
+// render periods UI (editable)
+function renderPeriodsUI(periods){
+  periodsList.innerHTML = '';
+  periods.forEach((per, idx)=>{
+    const row = document.createElement('div'); row.className = 'period-row';
+    row.dataset.idx = idx;
+    row.innerHTML = `
+      <input type="time" value="${per.start}" data-start />
+      <input type="time" value="${per.end}" data-end />
+      <select data-type>
+        <option value="normal"${per.type==='normal'?' selected':''}>Normal</option>
+        <option value="break"${per.type==='break'?' selected':''}>Break</option>
+        <option value="lunch"${per.type==='lunch'?' selected':''}>Lunch</option>
+        <option value="remedial"${per.type==='remedial'?' selected':''}>Remedial</option>
+      </select>
+      <input type="text" value="${per.label || ''}" placeholder="Label (optional)" data-label style="width:140px" />
+      <button class="small-btn" onclick="movePeriodUp(${idx})">▲</button>
+      <button class="small-btn" onclick="movePeriodDown(${idx})">▼</button>
+      <button class="small-btn" onclick="removePeriod(${idx})">Delete</button>
+    `;
+    periodsList.appendChild(row);
+  });
+}
+
+// period helpers
+function addPeriod(){
+  const s = schools[currentSchool];
+  if(!s) return alert('Select school');
+  s.periods.push({id:genId(), start:'00:00', end:'00:00', type:'normal', label:''});
+  renderPeriodsUI(s.periods);
+}
+function movePeriodUp(i){ const s = schools[currentSchool]; if(i<=0) return; const tmp = s.periods[i-1]; s.periods[i-1] = s.periods[i]; s.periods[i] = tmp; renderPeriodsUI(s.periods); }
+function movePeriodDown(i){ const s = schools[currentSchool]; if(i>=s.periods.length-1) return; const tmp = s.periods[i+1]; s.periods[i+1] = s.periods[i]; s.periods[i] = tmp; renderPeriodsUI(s.periods); }
+function removePeriod(i){ const s = schools[currentSchool]; if(!confirm('Remove period?')) return; s.periods.splice(i,1); renderPeriodsUI(s.periods); }
+function savePeriodsFromUI(){
+  const s = schools[currentSchool];
+  if(!s) return alert('Select school');
+  const rows = periodsList.querySelectorAll('.period-row');
+  const newPeriods = [];
+  for(const r of rows){
+    const start = r.querySelector('[data-start]').value;
+    const end = r.querySelector('[data-end]').value;
+    const type = r.querySelector('[data-type]').value;
+    const label = r.querySelector('[data-label]').value || `${start}-${end}`;
+    newPeriods.push({id:genId(), start, end, type, label});
+  }
+  s.periods = newPeriods;
+  saveAllSchools();
+  renderPeriodsUI(s.periods);
+  document.getElementById('leftStatus').textContent = 'Periods saved';
+  setTimeout(()=>document.getElementById('leftStatus').textContent='',2000);
+}
+function sortDefaultPeriods(){ const s = schools[currentSchool]; s.periods = defaultPeriods(); renderPeriodsUI(s.periods); saveAllSchools(); }
+
+// classes add/remove
+function addClass(){
+  const name = document.getElementById('newClassName').value.trim();
+  if(!name) return alert('Enter class name');
+  const s = schools[currentSchool];
+  if(!s) return alert('Select school');
+  if(s.classes.includes(name)) return alert('Class exists');
+  s.classes.push(name); renderTabs(s.classes); saveAllSchools(); document.getElementById('newClassName').value=''; selectClass(s.classes.length-1);
+}
+function removeSelectedClass(){
+  const s = schools[currentSchool]; if(!s) return;
+  const cls = s.classes[currentClassIndex]; if(!cls) return alert('Select a class');
+  if(!confirm('Remove class '+cls+'?')) return;
+  // remove timetable entries
+  delete s.timetable[cls];
+  s.classes.splice(currentClassIndex,1);
+  saveAllSchools(); renderTabs(s.classes); selectClass(0);
+}
+
+// tabs & timetable rendering
+function renderTabs(classes){
+  const tabs = document.getElementById('tabsContainer'); tabs.innerHTML = '';
+  classes.forEach((c, idx)=>{
+    const btn = document.createElement('button'); btn.textContent = c; btn.onclick = ()=> selectClass(idx); btn.id = 'tab-'+idx;
+    tabs.appendChild(btn);
+  });
+  if(classes.length>0) selectClass(0);
+}
+
+function selectClass(idx){
+  currentClassIndex = idx;
+  [...document.querySelectorAll('#tabsContainer button')].forEach(b=>b.classList.remove('active'));
+  const b = document.getElementById('tab-'+idx); if(b) b.classList.add('active');
+  const s = schools[currentSchool]; if(!s) return;
+  renderTimetableForClass(s.classes[idx]);
+}
+
+function ensureTimetableStructure(s){
+  s.classes.forEach(cls=>{
+    if(!s.timetable[cls]){
+      s.timetable[cls] = [];
+      for(let d=0; d<s.weekdays.length; d++){
+        s.timetable[cls][d] = new Array(s.periods.length).fill(null);
+      }
+    }
+  });
+}
+
+// render timetable for one class
+function renderTimetableForClass(className){
+  const s = schools[currentSchool]; if(!s) return;
+  ensureTimetableStructure(s);
+  const holder = document.getElementById('timetableHolder');
+  const days = s.weekdays;
+  let html = `<table class="timetable"><thead><tr><th>Time</th>`;
+  days.forEach(d=> html += `<th>${d}</th>`);
+  html += `</tr></thead><tbody>`;
+  for(let p=0; p<s.periods.length; p++){
+    const per = s.periods[p];
+    if(per.type === 'break'){ html += `<tr class="break"><td colspan="${1+days.length}">BREAK — ${per.label || per.start}</td></tr>`; continue; }
+    if(per.type === 'lunch'){ html += `<tr class="lunch"><td colspan="${1+days.length}">LUNCH — ${per.label || per.start}</td></tr>`; continue; }
+    if(per.type === 'remedial'){ html += `<tr class="remedial"><td colspan="${1+days.length}">REMEDIAL — ${per.label || (per.start+'-'+per.end)}</td></tr>`; continue; }
+    html += `<tr><td>${per.label || (per.start + ' - ' + per.end)}</td>`;
+    for(let d=0; d<days.length; d++){
+      const cell = s.timetable[className][d][p];
+      const content = cell ? `<div>${cell.subject}<br><small>${cell.teacherName||''}${cell.double? ' (Double)':''}</small></div>` : `<span class="empty">—</span>`;
+      html += `<td class="dropzone" data-day="${d}" data-period="${p}" data-label="${days[d]}">${content}</td>`;
+    }
+    html += `</tr>`;
+  }
+  html += `</tbody></table>`;
+  holder.innerHTML = html;
+
+  // attach drag/drop
+  holder.querySelectorAll('.dropzone').forEach(td=>{
+    td.addEventListener('dragover', e=> e.preventDefault());
+    td.addEventListener('drop', handleDropOnCell);
+    td.addEventListener('dblclick', handleClearCell);
+  });
+}
+
+// drag & drop handlers
+function handleDropOnCell(e){
+  e.preventDefault();
+  const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+  const day = +e.target.dataset.day;
+  const period = +e.target.dataset.period;
+  const s = schools[currentSchool];
+  const className = s.classes[currentClassIndex];
+  // assign
+  s.timetable[className][day][period] = { subject: data.subject, teacherName: data.teacherName, teacherId: data.teacherId, double: !!data.double };
+  // if double, attempt to assign next period if available and normal
+  if(data.double){
+    const nextP = period + 1;
+    if(nextP < s.periods.length && s.periods[nextP].type === 'normal'){
+      s.timetable[className][day][nextP] = { subject: data.subject, teacherName: data.teacherName, teacherId: data.teacherId, double: true };
+    }
+  }
+  saveAllSchools();
+  renderTimetableForClass(className);
+}
+
+function handleClearCell(e){
+  const day = +e.target.dataset.day;
+  const period = +e.target.dataset.period;
+  const s = schools[currentSchool]; const className = s.classes[currentClassIndex];
+  if(!confirm('Futa cell?')) return;
+  s.timetable[className][day][period] = null;
+  saveAllSchools();
+  renderTimetableForClass(className);
+}
+
+// Smart auto-generate (fair distribution, avoid teacher conflict)
+function smartGenerateForSchool(s){
+  // setup
+  s.periods = s.periods || defaultPeriods();
+  s.weekdays = s.weekdays || ["Monday","Tuesday","Wednesday","Thursday","Friday"];
+  // initialize timetable
+  s.timetable = {};
+  s.classes.forEach(cls=>{
+    s.timetable[cls] = [];
+    for(let d=0; d<s.weekdays.length; d++){
+      s.timetable[cls][d] = new Array(s.periods.length).fill(null);
+    }
+  });
+
+  // helper checks
+  function teacherCountOnDay(teacherId, day){
+    let cnt = 0;
+    for(const cls of s.classes){
+      const arr = s.timetable[cls][day];
+      if(!arr) continue;
+      arr.forEach(c => { if(c && c.teacherId === teacherId) cnt++; });
+    }
+    return cnt;
+  }
+  function teacherBusy(teacherId, day, period){
+    for(const cls of s.classes){
+      const arr = s.timetable[cls][day];
+      if(arr && arr[period] && arr[period].teacherId === teacherId) return true;
+    }
+    return false;
+  }
+
+  const teachers = s.teachers.slice();
+
+  // iterate weekdays and periods
+  for(let day=0; day<s.weekdays.length; day++){
+    for(let p=0; p<s.periods.length; p++){
+      const per = s.periods[p];
+      if(per.type !== 'normal') continue;
+      // shuffle teacher order for fairness
+      const pool = teachers.slice().sort(()=> Math.random() - 0.5);
+      // assign each class
+      for(const cls of s.classes){
+        if(s.timetable[cls][day][p]) continue; // skip if assigned
+        // sort pool by least assigned today
+        pool.sort((a,b)=> teacherCountOnDay(a.id,day) - teacherCountOnDay(b.id,day));
+        let assigned = null;
+        for(const t of pool){
+          if(teacherBusy(t.id, day, p)) continue;
+          if(s.maxPerDay && teacherCountOnDay(t.id, day) >= s.maxPerDay) continue;
+          // if t.double, ensure next slot available
+          if(t.double){
+            const nextP = p+1;
+            if(nextP < s.periods.length && s.periods[nextP].type === 'normal' && !teacherBusy(t.id, day, nextP)){
+              assigned = { subject: t.subject, teacherName: t.name, teacherId: t.id, double: true };
+            } else {
+              continue; // skip this t for now
+            }
+          } else {
+            assigned = { subject: t.subject, teacherName: t.name, teacherId: t.id, double: false };
+          }
+          if(assigned) break;
+        }
+        if(assigned){
+          s.timetable[cls][day][p] = assigned;
+          if(assigned.double) s.timetable[cls][day][p+1] = { ...assigned }; // fill next
+        } else {
+          s.timetable[cls][day][p] = null; // empty
+        }
+      }
+    }
+  }
+
+  // optional autofill with any available teacher for empty slots
+  if(document.getElementById('autofillCheck').checked){
+    for(let day=0; day<s.weekdays.length; day++){
+      for(let p=0; p<s.periods.length; p++){
+        const per = s.periods[p];
+        if(per.type !== 'normal') continue;
+        for(const cls of s.classes){
+          if(s.timetable[cls][day][p]) continue;
+          for(const t of teachers){
+            if(teacherBusy(t.id, day, p)) continue;
+            if(s.maxPerDay && teacherCountOnDay(t.id, day) >= s.maxPerDay) continue;
+            s.timetable[cls][day][p] = { subject: t.subject, teacherName: t.name, teacherId: t.id, double: false };
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // save
+  schools[s.name] = s;
+  saveAllSchools();
+}
+
+// UI actions
+function applyAndGenerate(){
+  const name = (schoolNameInput.value || 'Unnamed School').trim();
+  if(!name) return alert('Provide school name');
+  const teachers = parseTeachers(teachersInput.value);
+  const classes = classesInput.value.split(',').map(s=>s.trim()).filter(Boolean);
+  if(classes.length === 0) return alert('Add at least one class (comma-separated)');
+  const maxPerDay = parseInt(maxPerDayInput.value) || null;
+
+  const s = schools[name] || makeEmptySchool(name);
+  s.name = name;
+  s.teachers = teachers.length ? teachers : s.teachers;
+  s.classes = classes.length ? classes : s.classes;
+  s.maxPerDay = maxPerDay;
+  // periods might have been edited in UI - ensure we read them
+  const periodRows = periodsList.querySelectorAll('.period-row');
+  if(periodRows.length > 0){
+    const ps = [];
+    for(const r of periodRows){
+      const start = r.querySelector('[data-start]').value;
+      const end = r.querySelector('[data-end]').value;
+      const type = r.querySelector('[data-type]').value;
+      const label = r.querySelector('[data-label]').value || `${start}-${end}`;
+      ps.push({id:genId(), start, end, type, label});
+    }
+    s.periods = ps;
+  } else {
+    s.periods = s.periods || defaultPeriods();
+  }
+
+  // generate timetable
+  smartGenerateForSchool(s);
+  schools[name] = s;
+  saveAllSchools();
+  selectSchool(name);
+  document.getElementById('leftStatus').textContent = 'Saved & timetable generated for ' + name;
+  setTimeout(()=>document.getElementById('leftStatus').textContent='',2500);
+}
+
+function saveSchool(){
+  const name = (schoolNameInput.value || 'Unnamed School').trim();
+  if(!name) return alert('Provide school name');
+  const teachers = parseTeachers(teachersInput.value);
+  const classes = classesInput.value.split(',').map(s=>s.trim()).filter(Boolean);
+  const maxPerDay = parseInt(maxPerDayInput.value) || null;
+  const s = schools[name] || makeEmptySchool(name);
+  s.name = name;
+  s.teachers = teachers.length ? teachers : s.teachers;
+  s.classes = classes.length ? classes : s.classes;
+  s.maxPerDay = maxPerDay;
+  // update periods from UI
+  const periodRows = periodsList.querySelectorAll('.period-row');
+  if(periodRows.length > 0){
+    const ps = [];
+    for(const r of periodRows){
+      const start = r.querySelector('[data-start]').value;
+      const end = r.querySelector('[data-end]').value;
+      const type = r.querySelector('[data-type]').value;
+      const label = r.querySelector('[data-label]').value || `${start}-${end}`;
+      ps.push({id:genId(), start, end, type, label});
+    }
+    s.periods = ps;
+  }
+  schools[name] = s;
+  saveAllSchools();
+  selectSchool(name);
+  document.getElementById('leftStatus').textContent = 'School saved';
+  setTimeout(()=>document.getElementById('leftStatus').textContent='',2000);
+}
+
+function loadSchool(){ const name = schoolSelector.value; if(!name) return alert('Choose school'); selectSchool(name); document.getElementById('leftStatus').textContent = 'Loaded ' + name; setTimeout(()=>document.getElementById('leftStatus').textContent='',2000); }
+
+function saveCurrent(){ saveAllSchools(); document.getElementById('rightStatus').textContent = 'Saved'; setTimeout(()=>document.getElementById('rightStatus').textContent='',1500); }
+function resetCurrent(){ if(!confirm('Reset to last saved data?')) return; selectSchool(currentSchool); }
+function clearCurrent(){ if(!confirm('Clear entire timetable for this school?')) return; const s = schools[currentSchool]; s.timetable = {}; saveAllSchools(); renderTimetableForClass(s.classes[0]); }
+
+// export/import JSON
+function exportSchoolJSON(){
+  const s = schools[currentSchool]; if(!s) return alert('Select school'); const data = JSON.stringify(s,null,2); const blob = new Blob([data], {type:'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = currentSchool.replace(/\s+/g,'_') + '.school.json'; a.click(); URL.revokeObjectURL(url);
+}
+function importSchoolJSON(){
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept='.json,application/json'; inp.onchange = e => {
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const obj = JSON.parse(ev.target.result);
+        if(!obj.name) obj.name = 'Imported_'+genId();
+        schools[obj.name] = obj; saveAllSchools(); selectSchool(obj.name); alert('Imported ' + obj.name);
+      } catch(err){ alert('Invalid JSON'); }
+    }; reader.readAsText(file);
+  }; inp.click();
+}
+
+// export excel (one sheet per class)
+function exportExcel(){
+  const s = schools[currentSchool]; if(!s) return alert('Select school');
+  const wb = XLSX.utils.book_new();
+  s.classes.forEach(cls=>{
+    const data = []; const header = ['Time', ...s.weekdays]; data.push(header);
+    for(let p=0; p<s.periods.length; p++){
+      const per = s.periods[p];
+      if(per.type === 'break'){ data.push([`BREAK — ${per.label || per.start}`]); continue; }
+      if(per.type === 'lunch'){ data.push([`LUNCH — ${per.label || per.start}`]); continue; }
+      if(per.type === 'remedial'){ data.push([`REMEDIAL — ${per.label || per.start}-${per.end}`]); continue; }
+      const row = [`${per.label || per.start + ' - ' + per.end}`];
+      for(let d=0; d<s.weekdays.length; d++){
+        const cell = (s.timetable[cls] && s.timetable[cls][d] && s.timetable[cls][d][p]) || null;
+        row.push(cell ? `${cell.subject} — ${cell.teacherName}${cell.double? ' (Double)':''}` : '');
+      }
+      data.push(row);
+    }
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, cls.substring(0,31));
+  });
+  XLSX.writeFile(wb, (s.name || 'Timetable') + '.xlsx');
+}
+
+// print all classes single page (landscape)
+function printAllClasses(){
+  const s = schools[currentSchool]; if(!s) return alert('Select school');
+  // build a multi-column layout of class timetables to fit one landscape page
+  let html = `<html><head><title>${s.name} — Timetables</title><style>
+    body{font-family:Arial; color:#0b2336; padding:8px}
+    h2{font-size:12px; color:#0d47a1; margin:6px 0}
+    table.print-grid{width:100%; border-collapse:collapse; font-size:9px; margin-bottom:8px}
+    table.print-grid th{background:#1952a6;color:white;padding:4px;font-size:9px}
+    table.print-grid td{border:1px solid #ddd;padding:4px; height:18px; text-align:center}
+    .grid-wrap{display:grid; grid-template-columns: repeat(4, 1fr); gap:6px}
+    @media print{ @page{size:landscape; margin:6mm;} .grid-wrap{grid-template-columns: repeat(4, 1fr);} }
+    </style></head><body>`;
+  html += `<h1 style="font-size:14px">${s.name} — Full Timetable</h1>`;
+  html += `<div style="font-size:11px;color:#666;margin-bottom:6px">Generated: ${new Date().toLocaleString()}</div>`;
+  html += `<div class="grid-wrap">`;
+  // for each class, create a small table (columns = weekdays)
+  s.classes.forEach(cls=>{
+    html += `<div><h2>${cls}</h2><table class="print-grid"><thead><tr><th>Time</th>`;
+    s.weekdays.forEach(d=> html += `<th>${d}</th>`);
+    html += `</tr></thead><tbody>`;
+    for(let p=0; p<s.periods.length; p++){
+      const per = s.periods[p];
+      if(per.type === 'break'){ html += `<tr><td colspan="${1+s.weekdays.length}" style="background:#fff9c4;font-weight:700">BREAK — ${per.label||per.start}</td></tr>`; continue; }
+      if(per.type === 'lunch'){ html += `<tr><td colspan="${1+s.weekdays.length}" style="background:#ffccbc;font-weight:700">LUNCH — ${per.label||per.start}</td></tr>`; continue; }
+      if(per.type === 'remedial'){ html += `<tr><td colspan="${1+s.weekdays.length}" style="background:#c8e6c9;font-weight:700">REMEDIAL — ${per.label||per.start}</td></tr>`; continue; }
+      html += `<tr><td style="white-space:nowrap">${per.label||per.start+'-'+per.end}</td>`;
+      for(let d=0; d<s.weekdays.length; d++){
+        const cell = (s.timetable[cls] && s.timetable[cls][d] && s.timetable[cls][d][p]) || null;
+        html += `<td>${cell ? `${cell.subject}<br><small>${cell.teacherName}${cell.double?' (D)':''}</small>` : ''}</td>`;
+      }
+      html += `</tr>`;
+    }
+    html += `</tbody></table></div>`;
+  });
+  html += `</div><div style="text-align:center;margin-top:8px;color:#666">Developer: Isack Charles</div></body></html>`;
+  const w = window.open('', '_blank', 'width=1200,height=800'); w.document.write(html); w.document.close(); w.focus(); w.print();
+}
+
+// initial parse functions (duplicate-safe)
+function parseTeachersInput(){
+  return parseTeachers(teachersInput.value);
+}
+
+// apply on load
+function init(){
+  loadAllSchools();
+  const first = Object.keys(schools)[0];
+  if(first) selectSchool(first);
+  else { const b = makeEmptySchool('Tura Day Secondary'); schools['Tura Day Secondary'] = b; saveAllSchools(); selectSchool('Tura Day Secondary'); }
+}
+
+// expose functions to buttons
+window.promptNewSchool = promptNewSchool;
+window.deleteSchool = deleteSchool;
+window.applyAndGenerate = applyAndGenerate;
+window.saveSchool = saveSchool;
+window.loadSchool = loadSchool;
+window.addClass = addClass;
+window.removeSelectedClass = removeSelectedClass;
+window.addPeriod = addPeriod;
+window.sortDefaultPeriods = sortDefaultPeriods;
+window.savePeriodsFromUI = savePeriodsFromUI;
+window.exportExcel = exportExcel;
+window.printAllClasses = printAllClasses;
+window.exportSchoolJSON = exportSchoolJSON;
+window.importSchoolJSON = importSchoolJSON;
+window.saveCurrent = saveCurrent;
+window.resetCurrent = resetCurrent;
+window.clearCurrent = clearCurrent;
+
+// load at start
+init();
+</script>
+
+</body>
+</html>
